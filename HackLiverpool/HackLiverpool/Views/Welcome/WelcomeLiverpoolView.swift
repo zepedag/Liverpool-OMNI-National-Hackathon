@@ -16,7 +16,7 @@ struct WelcomeLiverpoolView: View {
     
         ZStack {
             if navigateToHomeViewRoot {
-                HomeView()
+                HomeViewMejorado()
             } else {
                 ZStack {
                     Color.liverpoolPink
