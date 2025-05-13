@@ -11,7 +11,7 @@ import SwiftUI
 struct HackLiverpoolApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeViewMejorado()
         }
     }
 }
