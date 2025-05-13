@@ -1,39 +1,94 @@
 import SwiftUI
-
-struct HomeView: View {
+struct HomeViewMejorado: View {
     @State private var selectedTab: String = "Lo nuevo"
-    
+    @State private var selectedProduct: Product?
+
+    let perfumes = [
+        Product(name: "Eau de parfum Kenzo Flower", price: "$2,990.00", imageName: "kenzo", description: "Perfume floral con notas de violeta y rosa.", sellerName: "Kenzo", rating: 4.5, ordersCount: 320),
+        Product(name: "Lancôme La Vie Est Belle", price: "$4,350.00", imageName: "lancome", description: "Fragancia dulce con esencias de iris y jazmín.", sellerName: "Lancôme", rating: 5.0, ordersCount: 580),
+        Product(name: "Carolina Herrera Good Girl", price: "$3,850.00", imageName: "goodgirl", description: "Fragancia elegante para ocasiones especiales.", sellerName: "Carolina Herrera", rating: 4.8, ordersCount: 410)
+    ]
+
+    let accessories = [
+        Product(name: "Pulsera Lacoste dorada", price: "$1,250.00", imageName: "lacoste", description: "Pulsera elegante chapada en oro.", sellerName: "Lacoste", rating: 4.2, ordersCount: 150),
+        Product(name: "Collar Swarovski Infinity", price: "$2,999.00", imageName: "swarovski", description: "Collar de cristales Swarovski con diseño infinito.", sellerName: "Swarovski", rating: 4.9, ordersCount: 260)
+    ]
+
+    let tech = [
+        Product(name: "Apple Watch Series 9", price: "$7,999.00", imageName: "watch", description: "Smartwatch con monitor de salud y conectividad total.", sellerName: "Apple", rating: 5.0, ordersCount: 1000),
+        Product(name: "Audífonos Bose", price: "$4,399.00", imageName: "bose", description: "Audífonos con cancelación activa de ruido.", sellerName: "Bose", rating: 4.7, ordersCount: 830)
+    ]
+
+    let fashion = [
+        Product(name: "Vestido rojo satinado", price: "$2,300.00", imageName: "dress1", description: "Vestido elegante ideal para eventos nocturnos.", sellerName: "Liverpool", rating: 4.6, ordersCount: 190),
+        Product(name: "Traje sastre negro", price: "$3,500.00", imageName: "suit", description: "Traje formal con corte moderno.", sellerName: "Liverpool", rating: 4.4, ordersCount: 270)
+    ]
+
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 24) {
-                    headerView
-                    tabsView
-                    bannerCarousel
-                    productSection(title: "Fragancias para todos los gustos", products: samplePerfumes)
-                    productSection(title: "Accesorios para el gran día ✨", products: sampleAccessories)
-                    productSection(title: "Tecnología que te acompaña", products: sampleTech)
-                    productSection(title: "Estilo para él y para ella", products: sampleFashion)
+            ZStack(alignment: .top) {
+                ScrollView {
+                    VStack(spacing: 24) {
+                        Spacer()
+                            .frame(height: 180)
+                        
+                        tabsView
+                        bannerCarousel
+                        productSection(title: "Fragancias para todos los gustos", products: perfumes)
+                        productSection(title: "Accesorios para el gran día ✨", products: accessories)
+                        productSection(title: "Tecnología que te acompaña", products: tech)
+                        productSection(title: "Estilo para él y para ella", products: fashion)
+                    }
+                    .padding(.bottom, 90)
                 }
-                .padding(.bottom, 90)
+                .background(Color(.systemGroupedBackground))
+                
+                // Header fijo
+                VStack(spacing: 0) {
+                    headerView
+                }
+                .background(Color(hex: "#D3008B"))
+                .zIndex(1) // Asegura que el header quede por encima del contenido
+                
+                // NavigationLink invisible para navegación a detalle de producto
+                NavigationLink(
+                    destination: selectedProduct.map { product in
+                        let price = Double(product.price.replacingOccurrences(of: "$", with: "").replacingOccurrences(of: ",", with: "")) ?? 0.0
+                        return Products(
+                            productImageName: product.imageName,
+                            productName: product.name,
+                            price: price,
+                            description: product.description,
+                            sellerName: product.sellerName,
+                            sellerRating: product.rating,
+                            ordersCount: product.ordersCount
+                        )
+                    },
+                    isActive: Binding(
+                        get: { selectedProduct != nil },
+                        set: { isActive in if !isActive { selectedProduct = nil } }
+                    )
+                ) {
+                    EmptyView()
+                }
             }
-            .background(Color(.systemGroupedBackground))
             .navigationBarHidden(true)
+            .edgesIgnoringSafeArea(.top) // Extiende el header hasta el borde superior
         }
     }
 
     // MARK: Header
     var headerView: some View {
         VStack(spacing: 12) {
+            // Añadir un poco de espacio para evitar conflicto con la cámara
+            Spacer()
+                .frame(height: UIApplication.shared.windows.first?.safeAreaInsets.top ?? 0)
+            
             HStack {
                 Label("Elige una tienda", systemImage: "mappin.and.ellipse")
                     .foregroundColor(.white)
                 Spacer()
-                HStack(spacing: 16) {
-                    Image(systemName: "heart")
-                    Image(systemName: "bag")
-                }
-                .foregroundColor(.white)
+                
             }
 
             HStack {
@@ -42,13 +97,19 @@ struct HomeView: View {
                         .foregroundColor(.gray)
                     TextField("Buscar por producto, marca y más", text: .constant(""))
                 }
+                
                 .padding(10)
                 .background(Color.white)
                 .cornerRadius(12)
+                
+                HStack(spacing: 16) {
+                    Image(systemName: "heart")
+                    Image(systemName: "bag")
+                }
+                .foregroundColor(.white)
             }
         }
         .padding()
-        .background(Color(hex: "#D3008B"))
     }
 
     // MARK: Tabs
@@ -112,14 +173,18 @@ struct HomeView: View {
                             Text(product.name)
                                 .font(.footnote)
                                 .lineLimit(2)
-                            Text(product.priceRange)
-                                .foregroundColor(.red)
+                            Text(product.price)
+                                .foregroundColor(Color(hex: "#E10098"))
                                 .font(.caption)
+                                .bold()
                         }
                         .frame(width: 140)
                         .background(Color.white)
                         .cornerRadius(12)
                         .shadow(color: .gray.opacity(0.1), radius: 3, x: 0, y: 2)
+                        .onTapGesture {
+                            selectedProduct = product
+                        }
                     }
                 }
                 .padding(.horizontal)
@@ -128,53 +193,11 @@ struct HomeView: View {
     }
 }
 
-// MARK: - Modelo y Ejemplos
-struct Product: Identifiable {
-    let id = UUID()
-    let name: String
-    let imageName: String
-    let priceRange: String
-}
+// NOTA: Dependiendo de la versión de SwiftUI que estés utilizando, podrías
+// necesitar actualizar la línea de UIApplication para usar UIScreen o el nuevo
+// método KeyWindowScene para obtener el safeAreaInset.
+// Esta versión usa el método antiguo compatible con más versiones de iOS.
 
-let samplePerfumes = [
-    Product(name: "Eau de parfum Kenzo Flower", imageName: "kenzo", priceRange: "$850 - $2,990"),
-    Product(name: "Lancôme La Vie Est Belle", imageName: "lancome", priceRange: "$1,930 - $4,350"),
-    Product(name: "Carolina Herrera Good Girl", imageName: "goodgirl", priceRange: "$1,100 - $3,850")
-]
-
-let sampleAccessories = [
-    Product(name: "Pulsera Lacoste dorada", imageName: "lacoste", priceRange: "$1,250"),
-    Product(name: "Collar Swarovski Infinity", imageName: "swarovski", priceRange: "$2,999")
-]
-
-let sampleTech = [
-    Product(name: "Apple Watch Series 9", imageName: "watch", priceRange: "$7,999"),
-    Product(name: "Audífonos Bose", imageName: "bose", priceRange: "$4,399")
-]
-
-let sampleFashion = [
-    Product(name: "Vestido rojo satinado", imageName: "dress1", priceRange: "$2,300"),
-    Product(name: "Traje sastre negro", imageName: "suit", priceRange: "$3,500")
-]
-
-// MARK: - Extensión para color Hex
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        let scanner = Scanner(string: hex)
-        if hex.hasPrefix("#") { scanner.currentIndex = scanner.string.index(after: scanner.currentIndex) }
-
-        var rgbValue: UInt64 = 0
-        scanner.scanHexInt64(&rgbValue)
-
-        let red = Double((rgbValue & 0xFF0000) >> 16) / 255
-        let green = Double((rgbValue & 0x00FF00) >> 8) / 255
-        let blue = Double(rgbValue & 0x0000FF) / 255
-
-        self.init(red: red, green: green, blue: blue)
-    }
-}
-
-#Preview {
-    HomeView()
+#Preview{
+    HomeViewMejorado()
 }
