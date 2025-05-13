@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		064EEF442DD3A85B00A2546F /* Property List.plist in Resources */ = {isa = PBXBuildFile; fileRef = 064EEF432DD3A85B00A2546F /* Property List.plist */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		064EEEB42DD3276200A2546F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		064EEEA32DD3276000A2546F /* HackLiverpool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HackLiverpool.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		064EEEB32DD3276200A2546F /* HackLiverpoolTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HackLiverpoolTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		064EEEBD2DD3276200A2546F /* HackLiverpoolUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HackLiverpoolUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		064EEF432DD3A85B00A2546F /* Property List.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Property List.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +80,7 @@
 		064EEE9A2DD3276000A2546F = {
 			isa = PBXGroup;
 			children = (
+				064EEF432DD3A85B00A2546F /* Property List.plist */,
 				064EEEA52DD3276000A2546F /* HackLiverpool */,
 				064EEEB62DD3276200A2546F /* HackLiverpoolTests */,
 				064EEEC02DD3276200A2546F /* HackLiverpoolUITests */,
@@ -212,6 +218,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				064EEF442DD3A85B00A2546F /* Property List.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -396,6 +403,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"HackLiverpool/Preview Content\"";
+				DEVELOPMENT_TEAM = QG4KZAH4JL;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -424,6 +432,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"HackLiverpool/Preview Content\"";
+				DEVELOPMENT_TEAM = QG4KZAH4JL;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
