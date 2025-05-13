@@ -1,4 +1,4 @@
-
+//Usar dismiss para el botón de cerrar
 import SwiftUI
 
 extension Color {
@@ -6,57 +6,65 @@ extension Color {
 }
 
 struct WelcomeLiverpoolView: View {
-    @State private var showNextScreen = false
+    @State private var showArrowView = false
+    @State private var navigateToHomeViewRoot = false
+    
     let swipeThreshold: CGFloat = -100
     @State private var arrowOffsetY: CGFloat = 0
 
     var body: some View {
+    
         ZStack {
-            Color.liverpoolPink // Ahora utiliza la extensión definida arriba
-                .edgesIgnoringSafeArea(.all)
-
-            VStack {
-                Spacer()
-
-                Text("¡Bienvenido a Liverpool!")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-
-                Spacer()
-
-                VStack(spacing: -5) {
-                    Image(systemName: "chevron.up")
-                        .font(.system(size: 28, weight: .medium))
-                        .foregroundColor(.white.opacity(0.5))
-                        .offset(y: arrowOffsetY)
-
-                    Image(systemName: "chevron.up")
-                        .font(.system(size: 28, weight: .medium))
-                        .foregroundColor(.white.opacity(0.9))
-                        .offset(y: arrowOffsetY)
-                }
-                .onAppear {
-                    withAnimation(Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
-                        arrowOffsetY = -12
+            if navigateToHomeViewRoot {
+                HomeView()
+            } else {
+                ZStack {
+                    Color.liverpoolPink
+                        .edgesIgnoringSafeArea(.all)
+                    VStack {
+                        Spacer()
+                        Text("¡Bienvenido a Liverpool!")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                        Spacer()
+                        VStack(spacing: -5) {
+                            Image(systemName: "chevron.up")
+                                .font(.system(size: 28, weight: .medium))
+                                .foregroundColor(.white.opacity(0.5))
+                                .offset(y: arrowOffsetY)
+                            Image(systemName: "chevron.up")
+                                .font(.system(size: 28, weight: .medium))
+                                .foregroundColor(.white.opacity(0.9))
+                                .offset(y: arrowOffsetY)
+                        }
+                        .onAppear {
+                            withAnimation(Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                                arrowOffsetY = -12
+                            }
+                        }
+                        .padding(.bottom, 50)
                     }
                 }
-                .padding(.bottom, 50)
+                .gesture(
+                    DragGesture()
+                        .onEnded { value in
+                            if value.translation.height < swipeThreshold && abs(value.translation.width) < abs(value.translation.height) {
+                                self.navigateToHomeViewRoot = false // Asegurarse de que no esté activo
+                                self.showArrowView = true
+                            }
+                        }
+                )
+                .fullScreenCover(isPresented: $showArrowView) {
+                    ArrowView(navigateToHomeViewRoot: $navigateToHomeViewRoot)
+                }
+                // Transición para cuando cambia entre Welcome y Home
+                .transition(.asymmetric(insertion: .opacity, removal: .opacity))
             }
         }
-        .gesture(
-            DragGesture()
-                .onEnded { value in
-                    if value.translation.height < swipeThreshold && abs(value.translation.width) < abs(value.translation.height) {
-                        self.showNextScreen = true
-                    }
-                }
-        )
-        .sheet(isPresented: $showNextScreen) {
-            SelectExperienceView()
-        }
+        .animation(.default, value: navigateToHomeViewRoot) // Animar el cambio a HomeView
     }
 }
 
