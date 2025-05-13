@@ -222,11 +222,11 @@ struct ArrowView: View {
 
     var body: some View {
         ZStack(alignment: .center) {
-            VStack(spacing: 15) { // Ajustar spacing general si es necesario
+            VStack(spacing: 100) { // Ajustar spacing general si es necesario
                 Spacer()
                 
                 if guidanceActive {
-                    Text("Guía a Electrónica")
+                    Text("Caminando a Perfumería")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundColor(Color.liverpoolPink)
 
@@ -266,11 +266,11 @@ struct ArrowView: View {
                     .padding(.horizontal, 40) // Padding para la barra de progreso
                     // --- Fin Barra de Progreso ---
                     
-                    Text("Posición Sim: (\(String(format: "%.1f", currentUserCoordinates.x)), \(String(format: "%.1f", currentUserCoordinates.y)))")
+                    /*Text("Posición Sim: (\(String(format: "%.1f", currentUserCoordinates.x)), \(String(format: "%.1f", currentUserCoordinates.y)))")
                         .font(.caption)
                         .padding(.top, 5)
                     Text("Heading Sim: \(String(format: "%.1f", simulatedDeviceHeading))° (\(String(format: "%.1f", arrowRotationDegrees))° flecha)")
-                        .font(.caption)
+                        .font(.caption)*/
 
                 } else if !showExperienceSelector {
                     Text(guidanceMessage)
