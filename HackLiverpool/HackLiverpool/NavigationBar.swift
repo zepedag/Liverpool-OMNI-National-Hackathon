@@ -2,7 +2,7 @@ import SwiftUI
 import MapKit
 
 struct NavigationBar: View {
-    @State private var selectedTab = 2
+    @State private var selectedTab = 0
     
     var body: some View {
         // Eliminamos el NavigationView anidado del TabView

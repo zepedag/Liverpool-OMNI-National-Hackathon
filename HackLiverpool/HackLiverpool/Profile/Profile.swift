@@ -15,7 +15,7 @@ struct AccountView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 15)
                 }
-                .background(Color(red: 0.85, green: 0.15, blue: 0.65))
+                .background(Color(hex: "#D3008B"))
                 
                 ScrollView {
                     VStack(spacing: 16) {
@@ -55,7 +55,14 @@ struct AccountView: View {
                             MenuIconRow(icon: "heart", text: "Wishlist")
                                 .frame(maxWidth: .infinity)
                         }
-                        
+                        NavigationLink(destination: VerDespuesEnTiendaView(
+                           
+                        )) {
+                            MenuLinkRow(icon: "storefront", text: "Ver en Tienda")
+                        }
+                        .background(Color.white)
+                        .cornerRadius(8)
+                        .shadow(color: Color.black.opacity(0.05), radius: 1)
                         // Benefits section
                         VStack {
                             MenuLinkRow(icon: "tag", text: "Beneficios")
