@@ -1,7 +1,17 @@
 import SwiftUI
+
+
 struct HomeViewMejorado: View {
     @State private var selectedTab: String = "Lo nuevo"
     @State private var selectedProduct: Product?
+    @State private var showSelectExperience = false
+    @State private var navigateToSelectExperience = false
+    @State private var navigateToHomeViewRoot = false
+    @State private var floatingOffset: CGFloat = 0
+    @State private var animateBounce = false
+    @State private var buttonOffset: CGSize = .zero
+    @State private var lastDragPosition: CGSize = .zero
+
 
     let perfumes = [
         Product(name: "Eau de parfum Kenzo Flower", price: "$2,990.00", imageName: "kenzo", description: "Perfume floral con notas de violeta y rosa.", sellerName: "Kenzo", rating: 4.5, ordersCount: 320),
@@ -29,9 +39,7 @@ struct HomeViewMejorado: View {
             ZStack(alignment: .top) {
                 ScrollView {
                     VStack(spacing: 24) {
-                        Spacer()
-                            .frame(height: 180)
-                        
+                        Spacer().frame(height: 180)
                         tabsView
                         bannerCarousel
                         productSection(title: "Fragancias para todos los gustos", products: perfumes)
@@ -42,15 +50,17 @@ struct HomeViewMejorado: View {
                     .padding(.bottom, 90)
                 }
                 .background(Color(.systemGroupedBackground))
-                
-                // Header fijo
+
                 VStack(spacing: 0) {
                     headerView
                 }
                 .background(Color(hex: "#D3008B"))
-                .zIndex(1) // Asegura que el header quede por encima del contenido
-                
-                // NavigationLink invisible para navegación a detalle de producto
+                .zIndex(1)
+
+                NavigationLink(destination: SelectExperienceView(navigateToHomeViewRoot: $navigateToHomeViewRoot), isActive: $navigateToSelectExperience) {
+                    EmptyView()
+                }
+
                 NavigationLink(
                     destination: selectedProduct.map { product in
                         let price = Double(product.price.replacingOccurrences(of: "$", with: "").replacingOccurrences(of: ",", with: "")) ?? 0.0
@@ -64,44 +74,71 @@ struct HomeViewMejorado: View {
                             ordersCount: product.ordersCount
                         )
                     },
-                    isActive: Binding(
-                        get: { selectedProduct != nil },
-                        set: { isActive in if !isActive { selectedProduct = nil } }
-                    )
+                    isActive: Binding(get: { selectedProduct != nil }, set: { if !$0 { selectedProduct = nil } })
                 ) {
                     EmptyView()
                 }
+
+                // Botón flotante
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            showSelectExperience = true
+                            self.navigateToSelectExperience = true
+                        }) {
+                            Image(systemName: "location.north.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color(hex: "#D3008B"))
+                                .clipShape(Circle())
+                                .shadow(radius: 5)
+                        }
+                        .offset(buttonOffset)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    // Movimiento suave con animación durante el arrastre
+                                    withAnimation(.easeOut(duration: 0.15)) {
+                                        buttonOffset = CGSize(
+                                            width: lastDragPosition.width + value.translation.width,
+                                            height: lastDragPosition.height + value.translation.height
+                                        )
+                                    }
+                                }
+                                .onEnded { _ in
+                                    // Guardar la posición final sin animación
+                                    lastDragPosition = buttonOffset
+                                }
+                        )
+                        .padding()
+                    }
+                }
             }
             .navigationBarHidden(true)
-            .edgesIgnoringSafeArea(.top) // Extiende el header hasta el borde superior
+            .edgesIgnoringSafeArea(.top)
         }
     }
 
-    // MARK: Header
     var headerView: some View {
         VStack(spacing: 12) {
-            // Añadir un poco de espacio para evitar conflicto con la cámara
-            Spacer()
-                .frame(height: UIApplication.shared.windows.first?.safeAreaInsets.top ?? 0)
-            
+            Spacer().frame(height: UIApplication.shared.windows.first?.safeAreaInsets.top ?? 0)
             HStack {
                 Label("Elige una tienda", systemImage: "mappin.and.ellipse")
                     .foregroundColor(.white)
                 Spacer()
-                
             }
-
             HStack {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.gray)
                     TextField("Buscar por producto, marca y más", text: .constant(""))
                 }
-                
                 .padding(10)
                 .background(Color.white)
                 .cornerRadius(12)
-                
                 HStack(spacing: 16) {
                     Image(systemName: "heart")
                     Image(systemName: "bag")
@@ -112,7 +149,6 @@ struct HomeViewMejorado: View {
         .padding()
     }
 
-    // MARK: Tabs
     var tabsView: some View {
         HStack(spacing: 0) {
             ForEach(["Lo nuevo", "Para ti"], id: \.self) { tab in
@@ -132,7 +168,6 @@ struct HomeViewMejorado: View {
         .padding(.horizontal)
     }
 
-    // MARK: Carrusel
     var bannerCarousel: some View {
         TabView {
             ForEach(1..<3) { i in
@@ -148,7 +183,6 @@ struct HomeViewMejorado: View {
         .frame(height: 280)
     }
 
-    // MARK: Productos
     func productSection(title: String, products: [Product]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -193,11 +227,11 @@ struct HomeViewMejorado: View {
     }
 }
 
-// NOTA: Dependiendo de la versión de SwiftUI que estés utilizando, podrías
-// necesitar actualizar la línea de UIApplication para usar UIScreen o el nuevo
-// método KeyWindowScene para obtener el safeAreaInset.
-// Esta versión usa el método antiguo compatible con más versiones de iOS.
 
-#Preview{
+
+
+// MARK: - Preview
+#Preview {
     HomeViewMejorado()
 }
+

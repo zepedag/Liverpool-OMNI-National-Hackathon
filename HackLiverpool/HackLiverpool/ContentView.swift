@@ -8,16 +8,44 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var showOverlay = true
+    @State private var navigateToMain = false
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationStack {
+            ZStack {
+                NavigationLink(
+                    destination: NavigationBar(), // Vista con navigationBar
+                    isActive: $navigateToMain,
+                    label: { EmptyView() }
+                )
+
+                if showOverlay {
+                    SelectExperienceOverlayView { action in
+                        switch action {
+                        case .close:
+                            showOverlay = false
+                        case .findProduct:
+                            // ...
+                            break
+                        case .requestExpert:
+                            // ...
+                            break
+                        case .exploreOnMyOwn:
+                            // Cerrar overlay y navegar
+                            showOverlay = false
+                            navigateToMain = true
+                        }
+                    }
+                } else {
+                    // Opcionalmente muestra otra cosa debajo
+                    Color.white.ignoresSafeArea()
+                }
+            }
         }
-        .padding()
     }
 }
+
 
 #Preview {
     ContentView()

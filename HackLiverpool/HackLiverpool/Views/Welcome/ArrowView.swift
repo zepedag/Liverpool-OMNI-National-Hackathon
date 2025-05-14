@@ -3,18 +3,16 @@ import SwiftUI
 
 struct ArrowView: View {
     @Environment(\.dismiss) var dismissArrowViewPresentation
-    @State private var showExperienceSelector = true
-    @State private var showExpertSheet = false
     @Binding var navigateToHomeViewRoot: Bool
 
     @State private var arrowRotationDegrees: Double = 0.0
     @State private var guidanceMessage: String = "Selecciona una opción para iniciar la guía."
     
-    let finalTargetCoordinates: CGPoint = CGPoint(x: 20, y: 45) // No se usa directamente si pathWaypoints es la guía
+    let finalTargetCoordinates: CGPoint = CGPoint(x: 20, y: 45)
     @State private var pathWaypoints: [CGPoint] = [
         CGPoint(x: 0, y: 20),
         CGPoint(x: 20, y: 20),
-        CGPoint(x: 20, y: 45) // Destino final implícito
+        CGPoint(x: 20, y: 45)
     ]
     @State private var currentWaypointIndex: Int = 0
     @State private var currentUserCoordinates: CGPoint = CGPoint(x: 0, y: 0)
@@ -27,66 +25,38 @@ struct ArrowView: View {
     let movementSpeed: CGFloat = 0.15
     let rotationSpeedFactor: Double = 0.07
 
-    @State private var guidanceActive: Bool = false
+    @State private var guidanceActive: Bool = true
     @State private var pulseAnimationAmount: CGFloat = 1.0
     @State private var bobAnimationAmount: CGFloat = 0.0
 
-    // --- Estados para la Barra de Progreso ---
-    @State private var totalPathDistance: CGFloat = 1.0 // Evitar división por cero
-    @State private var currentProgress: Double = 0.0   // De 0.0 a 1.0
-    // --- Fin Estados Barra de Progreso ---
-
-    // Helper para calcular distancia
+    @State private var totalPathDistance: CGFloat = 1.0
+    @State private var currentProgress: Double = 0.0
+    
+    // Helper function for distance calculation
     func distanceBetween(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
         return sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2))
     }
 
-    func handleExperienceAction(_ action: ExperienceAction) {
-        if showExperienceSelector {
-            showExperienceSelector = false
-        }
-        switch action {
-        case .findProduct:
-            print("Usuario permanece en ArrowView. Iniciando guía simulada...")
-            guidanceActive = true // El resto se maneja en .onChange(of: guidanceActive)
-            break
-        case .requestExpert, .exploreOnMyOwn, .close:
-            guidanceActive = false
-            if action == .requestExpert {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { self.showExpertSheet = true }
-            } else if action == .exploreOnMyOwn {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    self.navigateToHomeViewRoot = true
-                    self.dismissArrowViewPresentation()
-                }
-            } else if action == .close {
-                 guidanceMessage = "Guía detenida."
-                 currentProgress = 0.0 // Resetear progreso si se cierra manualmente
-            }
-            break
-        }
-    }
-    
     func resetSimulationAndPrepareGuidance() {
-        currentUserCoordinates = CGPoint(x: 0, y: 0) // Punto de inicio de la simulación
+        currentUserCoordinates = CGPoint(x: 0, y: 0)
         currentWaypointIndex = 0
         simulatedDeviceHeading = 0.0
         arrowRotationDegrees = 0.0
         isDeviceTurnDelayed = false
-        currentProgress = 0.0 // Progreso inicial
+        currentProgress = 0.0
 
-        // Calcular la distancia total del camino
+        // Calculate total path distance
         self.totalPathDistance = 0
-        var previousPointForSegment = self.currentUserCoordinates // Inicia desde la posición actual del usuario
+        var previousPointForSegment = self.currentUserCoordinates
         if !pathWaypoints.isEmpty {
             for i in 0..<pathWaypoints.count {
                 self.totalPathDistance += distanceBetween(previousPointForSegment, pathWaypoints[i])
                 previousPointForSegment = pathWaypoints[i]
             }
         }
-        if self.totalPathDistance == 0 { self.totalPathDistance = 1.0 } // Evitar división por cero
+        if self.totalPathDistance == 0 { self.totalPathDistance = 1.0 }
 
-        // Orientar el heading simulado inicial hacia el primer waypoint
+        // Orient initial simulated heading toward first waypoint
         if !pathWaypoints.isEmpty {
             let firstWaypoint = pathWaypoints[0]
             let deltaX = firstWaypoint.x - currentUserCoordinates.x
@@ -97,7 +67,7 @@ struct ArrowView: View {
         }
         guidanceMessage = "Calculando ruta simulada..."
         updateGuidanceArrow()
-        updateProgressIndicator() // Calcular progreso inicial
+        updateProgressIndicator()
     }
 
     func updateGuidanceArrow() {
@@ -116,30 +86,30 @@ struct ArrowView: View {
 
     func updateProgressIndicator() {
         guard totalPathDistance > 0 else {
-            currentProgress = guidanceActive ? 0.0 : 1.0 // Si no hay distancia, 0 si activo, 1 si inactivo (llegó)
+            currentProgress = guidanceActive ? 0.0 : 1.0
             return
         }
 
         var distanceTraveled: CGFloat = 0.0
-        var lastPointForTraveled = CGPoint(x: 0, y: 0) // Punto de inicio original de la simulación
+        var lastPointForTraveled = CGPoint(x: 0, y: 0)
 
-        // Distancia de segmentos completados
+        // Distance of completed segments
         for i in 0..<currentWaypointIndex {
             distanceTraveled += distanceBetween(lastPointForTraveled, pathWaypoints[i])
             lastPointForTraveled = pathWaypoints[i]
         }
 
-        // Distancia en el segmento actual (desde el inicio del segmento hasta la pos actual del usuario)
+        // Distance in current segment
         if currentWaypointIndex < pathWaypoints.count {
              distanceTraveled += distanceBetween(lastPointForTraveled, currentUserCoordinates)
-        } else { // Si ya superó el último waypoint, se considera que ha recorrido todo
+        } else {
             distanceTraveled = totalPathDistance
         }
         
         currentProgress = max(0.0, min(1.0, Double(distanceTraveled / totalPathDistance)))
 
         if !guidanceActive && distanceBetween(currentUserCoordinates, pathWaypoints.last ?? currentUserCoordinates) < 0.1 {
-             currentProgress = 1.0 // Asegurar 100% al llegar y desactivar guía
+             currentProgress = 1.0
         }
     }
 
@@ -158,12 +128,12 @@ struct ArrowView: View {
         var dyToWaypoint = targetWaypoint.y - currentUserCoordinates.y
         var distanceToWaypoint = distanceBetween(currentUserCoordinates, targetWaypoint)
 
-        // 1. Mover al usuario
+        // Move user
         if distanceToWaypoint > movementSpeed {
             let moveFactor = movementSpeed / distanceToWaypoint
             currentUserCoordinates.x += dxToWaypoint * moveFactor
             currentUserCoordinates.y += dyToWaypoint * moveFactor
-            dxToWaypoint = targetWaypoint.x - currentUserCoordinates.x // Recalcular para la lógica de llegada
+            dxToWaypoint = targetWaypoint.x - currentUserCoordinates.x
             dyToWaypoint = targetWaypoint.y - currentUserCoordinates.y
             distanceToWaypoint = distanceBetween(currentUserCoordinates, targetWaypoint)
         } else if distanceToWaypoint > 0.01 {
@@ -171,7 +141,7 @@ struct ArrowView: View {
             distanceToWaypoint = 0
         }
 
-        // 2. Verificar si se llegó al waypoint actual
+        // Check if reached current waypoint
         if distanceToWaypoint < 0.1 {
             if currentWaypointIndex < pathWaypoints.count - 1 {
                 currentWaypointIndex += 1
@@ -183,16 +153,16 @@ struct ArrowView: View {
                     }
                 }
             } else {
-                guidanceMessage = "¡Has llegado a Electrónica!"
-                guidanceActive = false // Detener simulación
-                currentProgress = 1.0 // Asegurar que el progreso sea 100%
+                guidanceMessage = "¡Has llegado a perfumeria!"
+                guidanceActive = false
+                currentProgress = 1.0
                 return
             }
         }
 
-        // 3. Simular orientación del dispositivo (SI NO ESTÁ RETRASADO)
+        // Simulate device orientation
         if !isDeviceTurnDelayed {
-            let currentTargetForHeading = pathWaypoints[currentWaypointIndex] // Usar el waypoint actual para el heading
+            let currentTargetForHeading = pathWaypoints[currentWaypointIndex]
             let dxForHeading = currentTargetForHeading.x - currentUserCoordinates.x
             let dyForHeading = currentTargetForHeading.y - currentUserCoordinates.y
 
@@ -206,30 +176,27 @@ struct ArrowView: View {
                 }
                 simulatedDeviceHeading = normalizeAngle(simulatedDeviceHeading)
             }
-            // Actualizar mensaje de distancia si no estamos en un "Gira!" o ya llegamos
-            if guidanceActive { // Verificar de nuevo por si se desactivó al llegar
-                 let finalDest = pathWaypoints.last!
-                 let overallDistanceRemaining = distanceBetween(currentUserCoordinates, finalDest) // Podría ser más complejo
-                 // Mejor usar la distancia al waypoint actual para el mensaje
+            
+            if guidanceActive {
                  let distToCurrentWptMsg = distanceBetween(currentUserCoordinates, pathWaypoints[currentWaypointIndex])
                  guidanceMessage = "Camina \(String(format: "%.0f", distToCurrentWptMsg))m en la dirección de la flecha."
             }
         }
         
         updateGuidanceArrow()
-        updateProgressIndicator() // Actualizar la barra de progreso
+        updateProgressIndicator()
     }
 
     var body: some View {
         ZStack(alignment: .center) {
-            VStack(spacing: 100) { // Ajustar spacing general si es necesario
+            VStack(spacing: 100) {
                 Spacer()
                 
                 if guidanceActive {
                     Text("Caminando a Perfumería")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundColor(Color.liverpoolPink)
-
+                    
                     Image(systemName: "arrow.up.circle.fill")
                         .resizable()
                         .scaledToFit()
@@ -239,7 +206,7 @@ struct ArrowView: View {
                         .offset(y: bobAnimationAmount)
                         .rotationEffect(.degrees(arrowRotationDegrees))
                         .animation(.easeInOut(duration: 0.35), value: arrowRotationDegrees)
-
+                    
                     Text(guidanceMessage)
                         .font(.title3)
                         .fontWeight(.medium)
@@ -247,56 +214,74 @@ struct ArrowView: View {
                         .padding(.horizontal, 30)
                         .frame(minHeight: 60)
                     
-                    // --- Barra de Progreso ---
                     VStack {
                         ProgressView(value: currentProgress)
                             .progressViewStyle(LinearProgressViewStyle(tint: Color.liverpoolPink))
-                            // La animación del progreso es importante para suavizarla
                             .animation(.linear(duration: 0.1), value: currentProgress)
                             .padding(.vertical, 5)
                         
                         HStack {
                             Text("Inicio")
                             Spacer()
-                            Image(systemName: "flag.fill") // Icono de meta
+                            Image(systemName: "flag.fill")
                         }
                         .font(.caption)
                         .foregroundColor(.gray)
+                        VStack {
+                            Button(action: {
+                                navigateToHomeViewRoot = true
+                                dismissArrowViewPresentation()
+                            }) {
+                                HStack {
+                                    Image(systemName: "xmark.circle.fill")
+                                    Text("Terminar")
+                                }
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.vertical, 12)
+                                .padding(.horizontal, 24)
+                                .background(Color.liverpoolPink)
+                                .cornerRadius(10)
+                            }
+                            .padding(.bottom, 60)
+                        }
                     }
-                    .padding(.horizontal, 40) // Padding para la barra de progreso
-                    // --- Fin Barra de Progreso ---
+                    .padding(.horizontal, 40)
                     
-                    /*Text("Posición Sim: (\(String(format: "%.1f", currentUserCoordinates.x)), \(String(format: "%.1f", currentUserCoordinates.y)))")
-                        .font(.caption)
-                        .padding(.top, 5)
-                    Text("Heading Sim: \(String(format: "%.1f", simulatedDeviceHeading))° (\(String(format: "%.1f", arrowRotationDegrees))° flecha)")
-                        .font(.caption)*/
-
-                } else if !showExperienceSelector {
+                } else {
                     Text(guidanceMessage)
                         .font(.title2)
                         .multilineTextAlignment(.center)
                         .padding()
-                    // Mostrar progreso final si se llegó
+                    
                     if currentProgress >= 1.0 {
-                         ProgressView(value: 1.0)
+                        ProgressView(value: 1.0)
                             .progressViewStyle(LinearProgressViewStyle(tint: Color.liverpoolPink))
                             .padding(.vertical, 5)
-                         HStack {
+                        HStack {
                             Text("Inicio")
                             Spacer()
                             Image(systemName: "flag.fill")
-
-                         }
-                         .font(.caption)
-                         .foregroundColor(.gray)
-                         .padding(.horizontal, 40)
+                            
+                        }
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .padding(.horizontal, 40)
+                        
+                        Button(action: {
+                            navigateToHomeViewRoot = true
+                            dismissArrowViewPresentation()
+                        }) {
+                            Text("Salir")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .padding()
+                                .frame(width: 200, height: 50)
+                                .background(Color.liverpoolPink)
+                                .cornerRadius(10)
+                        }
+                        .padding(.top, 30)
                     }
-                } else {
-                    Text("ArrowView")
-                        .font(.largeTitle)
-                    Text("Esperando selección...")
-                        .padding()
                 }
                 
                 Spacer()
@@ -304,17 +289,8 @@ struct ArrowView: View {
             }
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.orange.opacity(0.1).ignoresSafeArea())
+            .background(Color.white.opacity(0.1).ignoresSafeArea())
             .animation(.easeInOut(duration: 0.4), value: guidanceActive)
-
-
-            if showExperienceSelector {
-                SelectExperienceOverlayView(onAction: handleExperienceAction)
-            }
-        }
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showExperienceSelector)
-        .sheet(isPresented: $showExpertSheet) {
-            ExpertView()
         }
         .onReceive(simulationTimer) { _ in
             if guidanceActive {
@@ -336,15 +312,17 @@ struct ArrowView: View {
                     pulseAnimationAmount = 1.0
                     bobAnimationAmount = 0.0
                 }
-                // Si la guía se detiene porque se llegó al final, asegurar que el progreso sea 1.0
                 if distanceBetween(currentUserCoordinates, pathWaypoints.last ?? currentUserCoordinates) < 0.1 {
                     currentProgress = 1.0
                 }
             }
         }
+        .onAppear {
+            resetSimulationAndPrepareGuidance()
+        }
+        .navigationBarBackButtonHidden(true)
     }
 }
-
 struct ArrowView_Previews: PreviewProvider {
     static var previews: some View {
         ArrowView(navigateToHomeViewRoot: .constant(false))

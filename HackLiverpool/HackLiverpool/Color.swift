@@ -1,7 +1,13 @@
 import SwiftUI
 
 extension Color {
+    static let liverpoolPink = Color(hex: "#D3008B")
+        static let liverpoolDarkPink = Color(hex: "#B3007A")
+        static let liverpoolLightGray = Color(hex: "#F5F5F5")
+        static let liverpoolGray = Color(hex: "#888888")
+        static let liverpoolRed = Color(hex: "#E23B30")
     init(hex: String) {
+        
         let hex = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         let scanner = Scanner(string: hex)
         if hex.hasPrefix("#") {

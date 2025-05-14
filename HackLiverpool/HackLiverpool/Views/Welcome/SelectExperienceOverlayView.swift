@@ -1,6 +1,70 @@
-
 import SwiftUI
 
+struct SelectExperienceView: View {
+    @Environment(\.dismiss) var dismiss
+    @Binding var navigateToHomeViewRoot: Bool
+    
+    @State private var navigateToProduct = false
+    @State private var navigateToArrowView = false
+    @State private var navigateToExpert = false
+    @State private var navigateToNavigationBar = false // Nuevo estado para NavigationBar
+    @State private var showExitMessage = false
+    
+    var body: some View {
+        ZStack {
+            Color.white.opacity(0.1).ignoresSafeArea()
+            
+            VStack(spacing: 24) {
+                Text("¿Qué deseas hacer?")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .padding(.top, 30)
+                                
+                // Navigate to different views based on state
+                NavigationLink(destination: VerDespuesEnTiendaView(), isActive: $navigateToProduct) {
+                    EmptyView()
+                }
+                
+                NavigationLink(destination: ArrowView(navigateToHomeViewRoot: $navigateToHomeViewRoot), isActive: $navigateToArrowView) {
+                    EmptyView()
+                }
+                
+                NavigationLink(destination: WorkerView(clientname: "Maria Alicia", profileImage: "Tita"), isActive: $navigateToExpert) {
+                    EmptyView()
+                }
+                
+                // Nuevo NavigationLink para ir a NavigationBar
+                NavigationLink(destination: NavigationBar(), isActive: $navigateToNavigationBar) {
+                    EmptyView()
+                }
+                
+                // Use the overlay for selection
+                SelectExperienceOverlayView(onAction: handleAction)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+    
+    private func handleAction(_ action: ExperienceAction) {
+        switch action {
+        case .findProduct:
+            navigateToProduct = true
+        case .requestExpert:
+            navigateToExpert = true
+        case .exploreOnMyOwn:
+            showExitMessage = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                navigateToHomeViewRoot = true
+                dismiss()
+            }
+        case .close:
+            // Redirección a NavigationBar cuando se presiona el botón Cerrar
+            navigateToNavigationBar = true
+        }
+    }
+}
+
+// MARK: - Option Button View
 struct OptionButtonView: View {
     let iconName: String
     let title: String
@@ -8,100 +72,122 @@ struct OptionButtonView: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 15) { // Espaciado entre ícono y texto
+            HStack(spacing: 15) {
                 Image(systemName: iconName)
-                    .font(.system(size: 22, weight: .medium)) // Ícono más grande
-                    .foregroundColor(Color.liverpoolPink) // Necesita Color.liverpoolPink
-                    .frame(width: 30, alignment: .center) // Ancho para el ícono
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundColor(Color.liverpoolPink)
+                    .frame(width: 30, alignment: .center)
 
                 Text(title)
-                    .font(.system(size: 16, weight: .medium)) // Texto del botón más grande
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.primary)
-                    .lineLimit(1) // Preferiblemente una línea con texto corto
+                    .lineLimit(1)
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .medium)) // Chevron un poco más grande
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondary)
             }
-            // Padding interno del botón para hacerlo más grande
             .padding(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12) // Bordes redondeados
+            .cornerRadius(12)
         }
     }
 }
 
+
+// MARK: - Select Experience Overlay View
 struct SelectExperienceOverlayView: View {
-    // 'onAction' espera el 'ExperienceAction' global.
     var onAction: (ExperienceAction) -> Void
 
+    @State private var showMessage = false
+
     var body: some View {
-        VStack(spacing: 18) { // Espaciado entre elementos del VStack
-            Text("Elige una opción") // Título más corto e intuitivo
-                .font(.system(size: 20, weight: .semibold)) // Fuente del título más grande
-                .padding(.top, 20) // Más espacio arriba
-                .padding(.bottom, 10) // Espacio debajo del título
+        ZStack {
+            VStack(spacing: 18) {
+                if showMessage {
+                    VStack {
+                        Spacer()
+                        Text("¡Disfrute su visita!")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(Color.liverpoolPink)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                            .transition(.opacity)
+                        Spacer()
+                    }
+                } else {
+                    Text("Elige una opción")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(Color.white)
+                        .padding(.top, 20)
+                        .padding(.bottom, 10)
 
-            OptionButtonView(
-                iconName: "safari.fill", // Ícono más directo para búsqueda
-                title: "Ir al producto",    // Texto corto
-                action: {
-                    onAction(.findProduct)
+                    OptionButtonView(
+                        iconName: "safari.fill",
+                        title: "Ir al producto",
+                        action: {
+                            onAction(.findProduct)
+                        }
+                    )
+
+                    OptionButtonView(
+                        iconName: "figure.stand.line.dotted.figure.stand",
+                        title: "Pedir ayuda",
+                        action: {
+                            onAction(.requestExpert)
+                        }
+                    )
+
+                    OptionButtonView(
+                        iconName: "figure.walk",
+                        title: "Explorar solo",
+                        action: {
+                            withAnimation {
+                                showMessage = true
+                            }
+
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                                withAnimation {
+                                    onAction(.exploreOnMyOwn)
+                                }
+                            }
+                        }
+                    )
+
+                    Button {
+                        onAction(.close)
+                    } label: {
+                        Text("Cerrar")
+                            .font(.system(size: 16, weight: .semibold))
+                            .padding(EdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20))
+                            .frame(maxWidth: .infinity)
+                            .background(Color.liverpoolPink.opacity(0.3))
+                            .foregroundColor(Color.white)
+                            .cornerRadius(10)
+                    }
+                    .padding(.top, 10)
+                    .padding([.horizontal, .bottom], 20)
                 }
-            )
-
-            OptionButtonView(
-                iconName: "figure.stand.line.dotted.figure.stand", // Ícono para asistencia
-                title: "Pedir ayuda",        // Texto corto
-                action: {
-                    onAction(.requestExpert)
-                }
-            )
-
-            OptionButtonView(
-                iconName: "figure.walk", // Ícono para explorar
-                title: "Explorar solo",      // Texto corto
-                action: {
-                    onAction(.exploreOnMyOwn)
-                }
-            )
-
-            Button {
-                onAction(.close)
-            } label: {
-                Text("Cerrar")
-                    .font(.system(size: 16, weight: .semibold)) // Fuente del botón "Cerrar"
-                    .padding(EdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)) // Padding del botón
-                    .frame(maxWidth: .infinity)
-                    .background(Color.gray.opacity(0.2))
-                    .foregroundColor(.primary)
-                    .cornerRadius(10)
             }
-            .padding(.top, 10) // Espacio antes del botón cerrar
-            .padding([.horizontal, .bottom], 20) // Padding horizontal y al fondo
+            .padding(.horizontal, 15)
+            .frame(width: 310, height: 400)
+            .background(Color.liverpoolPink)
+            .cornerRadius(25)
+            .shadow(color: Color.black.opacity(0.25), radius: 12, x: 0, y: 6)
         }
-        .padding(.horizontal, 15) // Padding horizontal del VStack contenedor
-        .frame(width: 310, height: 400) // Ajuste del tamaño del overlay
-        .background(Material.regular)
-        .cornerRadius(25) // Bordes más redondeados para el overlay
-        .shadow(color: Color.black.opacity(0.25), radius: 12, x: 0, y: 6)
-        .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 }
 
 // Preview para SelectExperienceOverlayView
 struct SelectExperienceOverlayView_Previews: PreviewProvider {
     static var previews: some View {
-        // Asegúrate de que ExperienceAction y Color.liverpoolPink estén definidas
-        // globalmente para que esta preview funcione correctamente.
         ZStack {
-            Color.blue.ignoresSafeArea() // Un fondo para la preview
+            Color.white.ignoresSafeArea() // Un fondo para la preview
             SelectExperienceOverlayView(onAction: { action in
                 print("Preview action: \(action)")
             })
         }
     }
 }
-
